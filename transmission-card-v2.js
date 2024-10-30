@@ -1,7 +1,17 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 class TransmissionCardV2 extends HTMLElement {
     constructor() {
         super(...arguments);
         this.content = null;
+        this.statusMessage = '';
     }
     // Whenever the state changes, a new `hass` object is set. Use this to
     // update your content.
@@ -9,20 +19,61 @@ class TransmissionCardV2 extends HTMLElement {
         // Initialize the content if it's not there yet.
         if (!this.content) {
             this.innerHTML = `
-        <ha-card header="Example-card">
-          <div class="card-content"></div>
+        <ha-card header="Transmission">
+          <div class="card-content">
+            <div class="input-group">
+              <input type="text" placeholder="Enter torrent URL or magnet link" />
+              <button>Add Torrent</button>
+            </div>
+            <div class="status-message"></div>
+            <div class="torrent-info"></div>
+          </div>
         </ha-card>
       `;
-            this.content = this.querySelector("div");
+            this.content = this.querySelector(".torrent-info");
+            this.inputField = this.querySelector("input");
+            // Add button click handler
+            const button = this.querySelector("button");
+            button.addEventListener("click", () => this._addTorrent(hass));
         }
+        // Update torrent info display
         const entityId = this.config.entity;
         const state = hass.states[entityId];
         const stateStr = state ? state.state : "unavailable";
         this.content.innerHTML = `
       The state of ${entityId} is ${stateStr}!
-      <br><br>
-      <img src="http://via.placeholder.com/350x150">
     `;
+        // Update status message if exists
+        const statusEl = this.querySelector(".status-message");
+        if (statusEl) {
+            statusEl.innerHTML = this.statusMessage;
+        }
+    }
+    _addTorrent(hass) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const torrentUrl = this.inputField.value.trim();
+            if (!torrentUrl) {
+                this.statusMessage = '<div class="error">Please enter a torrent URL or magnet link</div>';
+                this.requestUpdate();
+                return;
+            }
+            try {
+                yield hass.callService('transmission', 'add_torrent', {
+                    entry_id: this.config.entry_id, // Make sure to add entry_id to card config
+                    torrent: torrentUrl
+                });
+                this.statusMessage = '<div class="success">Torrent added successfully!</div>';
+                this.inputField.value = ''; // Clear input field
+            }
+            catch (error) {
+                this.statusMessage = `<div class="error">Error adding torrent: ${error.message}</div>`;
+            }
+            this.requestUpdate();
+        });
+    }
+    // Helper method to trigger update
+    requestUpdate() {
+        this.hass = this.hass;
     }
     // The user supplied configuration. Throw an exception and Home Assistant
     // will render an error card.
@@ -67,4 +118,42 @@ window.customCards.push({
     name: "Transmission Card V2",
     description: "A custom card for Transmission"
 });
+// Add styles at the end of the file
+const style = document.createElement('style');
+style.textContent = `
+  .input-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .input-group input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+  }
+  
+  .input-group button {
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: var(--primary-text-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .status-message {
+    margin-bottom: 16px;
+  }
+  
+  .error {
+    color: var(--error-color);
+  }
+  
+  .success {
+    color: var(--success-color);
+  }
+`;
+document.head.appendChild(style);
 export {};
