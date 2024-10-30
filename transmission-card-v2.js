@@ -108,6 +108,46 @@ class TransmissionCardV2 extends HTMLElement {
             config: {}
         };
     }
+    connectedCallback() {
+        // Add styles when element is connected to DOM
+        const style = document.createElement('style');
+        style.textContent = `
+      .input-group {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      
+      .input-group input {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid var(--divider-color);
+        border-radius: 4px;
+      }
+      
+      .input-group button {
+        padding: 8px 16px;
+        background-color: var(--primary-color);
+        color: var(--text-primary-color);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      
+      .status-message {
+        margin-bottom: 16px;
+      }
+      
+      .error {
+        color: var(--error-color);
+      }
+      
+      .success {
+        color: var(--success-color);
+      }
+    `;
+        this.appendChild(style);
+    }
 }
 // Update the element registration
 window.customElements.define("transmission-card-v2", TransmissionCardV2);
@@ -118,42 +158,4 @@ window.customCards.push({
     name: "Transmission Card V2",
     description: "A custom card for Transmission"
 });
-// Add styles at the end of the file
-const style = document.createElement('style');
-style.textContent = `
-  .input-group {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  
-  .input-group input {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid var(--divider-color);
-    border-radius: 4px;
-  }
-  
-  .input-group button {
-    padding: 8px 16px;
-    background-color: var(--primary-color);
-    color: var(--primary-text-color);
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .status-message {
-    margin-bottom: 16px;
-  }
-  
-  .error {
-    color: var(--error-color);
-  }
-  
-  .success {
-    color: var(--success-color);
-  }
-`;
-document.head.appendChild(style);
 export {};
